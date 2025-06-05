@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Comercial CRUD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hidden { display: none; }
+        .active { background-color: #e9d5ff; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <!-- Tela de Login -->
+        <div id="login-screen" class="max-w-md mx-auto bg-white p-8 rounded shadow">
+            <h1 class="text-2xl font-bold mb-6 text-center">ControleComercial</h1>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block mb-1">Usuário:</label>
+                    <input type="text" id="username" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block mb-1">Senha:</label>
+                    <input type="password" id="password" class="w-full p-2 border rounded" required>
+                </div>
+                <button type="submit" class="w-full bg-purple-600 text-white p-2 rounded hover:bg-purple-700">Entrar</button>
+                <p class="text-center">Não tem conta? <button type="button" id="show-register" class="text-purple-600">Cadastre-se</button></p>
+            </form>
+        </div>
+
+        <!-- Tela de Cadastro -->
+        <div id="register-screen" class="max-w-md mx-auto bg-white p-8 rounded shadow hidden">
+            <h1 class="text-2xl font-bold mb-6 text-center">Cadastro de Usuário</h1>
+            <form id="register-form" class="space-y-4">
+                <div>
+                    <label class="block mb-1">Nome:</label>
+                    <input type="text" id="reg-name" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block mb-1">Usuário:</label>
+                    <input type="text" id="reg-username" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block mb-1">Senha:</label>
+                    <input type="password" id="reg-password" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block mb-1">Confirmar Senha:</label>
+                    <input type="password" id="reg-confirm-password" class="w-full p-2 border rounded" required>
+                </div>
+                <button type="submit" class="w-full bg-purple-600 text-white p-2 rounded hover:bg-purple-700">Cadastrar</button>
+                <p class="text-center">Já tem conta? <button type="button" id="show-login" class="text-purple-600">Faça login</button></p>
+            </form>
+        </div>
+
+        <!-- Sistema Principal -->
+        <div id="app" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold">Controle Comercial</h1>
+                <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Sair</button>
+            </div>
+
+            <div class="flex mb-6">
+                <button id="products-btn" class="px-4 py-2 border rounded-l hover:bg-gray-200 active">Produtos</button>
+                <button id="entries-btn" class="px-4 py-2 border-t border-b hover:bg-gray-200">Entradas</button>
+                <button id="exits-btn" class="px-4 py-2 border-t border-b hover:bg-gray-200">Saídas</button>
+                <button id="reports-btn" class="px-4 py-2 border rounded-r hover:bg-gray-200">Relatórios</button>
+            </div>
+
+            <!-- Seção de Produtos -->
+            <div id="products-section">
+                <div class="flex justify-between mb-4">
+                    <h2 class="text-xl font-semibold">Produtos</h2>
+                    <button id="add-product-btn" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Adicionar Produto</button>
+                </div>
+
+                <!-- Formulário de Produto (hidden por padrão) -->
+                <div id="product-form" class="bg-white p-4 rounded shadow mb-4 hidden">
+                    <form id="product-form-data">
+                        <input type="hidden" id="product-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block mb-1">Código:</label>
+                                <input type="text" id="product-code" class="w-full p-2 border rounded" required>
+                            </div>
+                            <div>
+                                <label class="block mb-1">Nome:</label>
+                                <input type="text" id="product-name" class="w-full p-2 border rounded" required>
+                            </div>
+                            <div>
+                                <label class="block mb-1">Categoria:</label>
+                                <input type="text" id="product-category" class="w-full p-2 border rounded" required>
+                            </div>
+                            <div>
+                                <label class="block mb-1">Quantidade:</label>
+                                <input type="number" id="product-quantity" class="w-full p-2 border rounded" required>
+                            </div>
+                            <div>
+                                <label class="block mb-1">Preço:</label>
+                                <input type="number" step="0.01" id="product-price" class="w-full p-2 border rounded" required>
+                            </div>
+                            <div>
+                                <label class="block mb-1">Estoque Mínimo:</label>
+                                <input type="number" id="product-min-stock" class="w-full p-2 border rounded" required>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" id="cancel-product-btn" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancelar</button>
+                            <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Lista de Produtos -->
+                <div class="bg-white rounded shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estoque</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preço</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-list" class="bg-white divide-y divide-gray-200">
+                            <!-- Produtos serão inseridos aqui via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Seção de Entradas -->
+            <div id="entries-section" class="hidden">
+                <div class="flex justify-between mb-4">
+                    <h2 class="text-xl font-semibold">Entradas no Estoque</h2>
+                    <button id="add-entry-btn" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Nova Entrada</button>
+                </div>
+
+                <!-- Formulário de Entrada -->
+                <div id="entry-form" class="bg-white p-4 rounded shadow mb-4 hidden">
+                    <form id="entry-form-data">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block mb-1">Produto:</label>
+                                <select id="entry-product" class="w-full p-2 border rounded" required>
+                                    <!-- Opções serão preenchidas via JavaScript -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block mb-1">Quantidade:</label>
+                                <input type="number" id="entry-quantity" class="w-full p-2 border rounded" required>
+                            </div>
+                            <div>
+                                <label class="block mb-1">Data:</label>
+                                <input type="date" id="entry-date" class="w-full p-2 border rounded" required>
+                            </div>
+                            <div>
+                                <label class="block mb-1">Fornecedor:</label>
+                                <input type="text" id="entry-supplier" class="w-full p-2 border rounded" required>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block mb-1">Observação:</label>
+                                <textarea id="entry-notes" class="w-full p-2 border rounded"></textarea>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" id="cancel-entry-btn" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancelar</button>
+                            <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Registrar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Lista de Entradas -->
+                <div class="bg-white rounded shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantidade</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fornecedor</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="entries-list" class="bg-white divide-y divide-gray-200">
+                            <!-- Entradas serão inseridas aqui via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Seção de Saídas -->
+            <div id="exits-section" class="hidden">
+                <div class="flex justify-between mb-4">
+                    <h2 class="text-xl font-semibold">Saídas do Estoque</h2>
+                    <button id="add-exit-btn" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Nova Saída</button>
+                </div>
+
+                <!-- Formulário de Saída -->
+                <div id="exit-form" class="bg-white p-4 rounded shadow mb-4 hidden">
+                    <form id="exit-form-data">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block mb-1">Produto:</label>
+                                <select id="exit-product" class="w-full p-2 border rounded" required>
+                                    <!-- Opções serão preenchidas via JavaScript -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block mb-1">Quantidade:</label>
+                                <input type="number" id="exit-quantity" class="w-full p-2 border rounded" required>
+                            </div>
+                            <div>
+                                <label class="block mb-1">Data:</label>
+                                <input type="date" id="exit-date" class="w-full p-2 border rounded" required>
+                            </div>
+                            <div>
+                                <label class="block mb-1">Destino:</label>
+                                <input type="text" id="exit-destination" class="w-full p-2 border rounded" required>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block mb-1">Observação:</label>
+                                <textarea id="exit-notes" class="w-full p-2 border rounded"></textarea>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" id="cancel-exit-btn" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancelar</button>
+                            <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Registrar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Lista de Saídas -->
+                <div class="bg-white rounded shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantidade</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Destino</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exits-list" class="bg-white divide-y divide-gray-200">
+                            <!-- Saídas serão inseridas aqui via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Seção de Relatórios -->
+            <div id="reports-section" class="hidden">
+                <h2 class="text-xl font-semibold mb-4">Relatórios</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-medium mb-2">Produtos em Estoque</h3>
+                        <p class="text-2xl font-bold" id="total-products">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-medium mb-2">Itens com Estoque Baixo</h3>
+                        <p class="text-2xl font-bold" id="low-stock">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-medium mb-2">Valor Total em Estoque</h3>
+                        <p class="text-2xl font-bold" id="total-value">R$ 0,00</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded shadow mb-6">
+                    <h3 class="font-medium mb-2">Produtos com Estoque Baixo</h3>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estoque Atual</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mínimo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="low-stock-list" class="bg-white divide-y divide-gray-200">
+                            <!-- Produtos com estoque baixo serão inseridos aqui via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-medium mb-2">Movimentação Recente</h3>
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produto</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qtd</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-movements" class="bg-white divide-y divide-gray-200">
+                                <!-- Movimentações recentes serão inseridas aqui via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-medium mb-2">Produtos Mais Movimentados</h3>
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produto</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entradas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Saídas</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-products" class="bg-white divide-y divide-gray-200">
+                                <!-- Produtos mais movimentados serão inseridos aqui via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Banco de dados em memória
+        
+let db = JSON.parse(localStorage.getItem('db')) || {
+    users: [
+        { id: 1, name: "Admin", username: "admin", password: "admin123" }
+    ],
+    products: [
+        { id: 1, code: "PRD001", name: "Mouse Gamer", category: "Periféricos", quantity: 50, price: 89.90, minStock: 10 },
+        { id: 2, code: "PRD002", name: "Teclado Mecânico", category: "Periféricos", quantity: 30, price: 249.90, minStock: 5 },
+        { id: 3, code: "PRD003", name: "Monitor 24\"", category: "Monitores", quantity: 15, price: 899.90, minStock: 3 }
+    ],
+    entries: [
+        { id: 1, productId: 1, quantity: 20, date: "2023-06-01", supplier: "Fornecedor A", notes: "Pedido 12345" },
+        { id: 2, productId: 2, quantity: 10, date: "2023-06-05", supplier: "Fornecedor B", notes: "" }
+    ],
+    exits: [
+        { id: 1, productId: 1, quantity: 5, date: "2023-06-10", destination: "Cliente X", notes: "Venda" },
+        { id: 2, productId: 3, quantity: 2, date: "2023-06-12", destination: "Cliente Y", notes: "Venda online" }
+    ]
+};
+
+function saveDB() {
+    localStorage.setItem('db', JSON.stringify(db));
+}
+
+
+        // Estado da aplicação
+        let currentUser = null;
+        let currentSection = 'products';
+
+        // Elementos da interface
+        const loginScreen = document.getElementById('login-screen');
+        const registerScreen = document.getElementById('register-screen');
+        const app = document.getElementById('app');
+        const productsSection = document.getElementById('products-section');
+        const entriesSection = document.getElementById('entries-section');
+        const exitsSection = document.getElementById('exits-section');
+        const reportsSection = document.getElementById('reports-section');
+
+        // Funções auxiliares
+        function showSection(section) {
+            productsSection.classList.add('hidden');
+            entriesSection.classList.add('hidden');
+            exitsSection.classList.add('hidden');
+            reportsSection.classList.add('hidden');
+            
+            currentSection = section;
+            
+            if (section === 'products') {
+                productsSection.classList.remove('hidden');
+                updateProductsList();
+            } else if (section === 'entries') {
+                entriesSection.classList.remove('hidden');
+                updateEntriesList();
+            } else if (section === 'exits') {
+                exitsSection.classList.remove('hidden');
+                updateExitsList();
+            } else if (section === 'reports') {
+                reportsSection.classList.remove('hidden');
+                updateReports();
+            }
+        }
+
+        function updateProductsList() {
+            const productsList = document.getElementById('products-list');
+            productsList.innerHTML = '';
+            
+            db.products.forEach(product => {
+                const productItem = document.createElement('tr');
+                productItem.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${product.code}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${product.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${product.category}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${product.quantity}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">R$ ${product.price.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button class="text-purple-600 hover:text-purple-900 mr-2 edit-product" data-id="${product.id}">Editar</button>
+                        <button class="text-red-600 hover:text-red-900 delete-product" data-id="${product.id}">Excluir</button>
+                    </td>
+                `;
+                productsList.appendChild(productItem);
+            });
+            
+            // Adiciona eventos aos botões
+            document.querySelectorAll('.edit-product').forEach(button => {
+                button.addEventListener('click', (e) => editProduct(parseInt(e.target.dataset.id)));
+            });
+            
+            document.querySelectorAll('.delete-product').forEach(button => {
+                button.addEventListener('click', (e) => deleteProduct(parseInt(e.target.dataset.id)));
+            });
+        }
+
+        function updateEntriesList() {
+            const entriesList = document.getElementById('entries-list');
+            entriesList.innerHTML = '';
+            
+            db.entries.forEach(entry => {
+                const product = db.products.find(p => p.id === entry.productId);
+                const productName = product ? product.name : 'Produto não encontrado';
+                
+                const entryItem = document.createElement('tr');
+                entryItem.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${entry.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${productName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${entry.quantity}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${entry.supplier}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button class="text-red-600 hover:text-red-900 delete-entry" data-id="${entry.id}">Excluir</button>
+                    </td>
+                `;
+                entriesList.appendChild(entryItem);
+            });
+            
+            // Adiciona eventos aos botões
+            document.querySelectorAll('.delete-entry').forEach(button => {
+                button.addEventListener('click', (e) => deleteEntry(parseInt(e.target.dataset.id)));
+            });
+        }
+
+        function updateExitsList() {
+            const exitsList = document.getElementById('exits-list');
+            exitsList.innerHTML = '';
+            
+            db.exits.forEach(exit => {
+                const product = db.products.find(p => p.id === exit.productId);
+                const productName = product ? product.name : 'Produto não encontrado';
+                
+                const exitItem = document.createElement('tr');
+                exitItem.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${exit.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${productName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${exit.quantity}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${exit.destination}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button class="text-red-600 hover:text-red-900 delete-exit" data-id="${exit.id}">Excluir</button>
+                    </td>
+                `;
+                exitsList.appendChild(exitItem);
+            });
+            
+            // Adiciona eventos aos botões
+            document.querySelectorAll('.delete-exit').forEach(button => {
+                button.addEventListener('click', (e) => deleteExit(parseInt(e.target.dataset.id)));
+            });
+        }
+
+        function updateReports() {
+            // Total de produtos
+            document.getElementById('total-products').textContent = db.products.length;
+            
+            // Itens com estoque baixo
+            const lowStockItems = db.products.filter(p => p.quantity <= p.minStock);
+            document.getElementById('low-stock').textContent = lowStockItems.length;
+            
+            // Valor total em estoque
+            const totalValue = db.products.reduce((sum, p) => sum + (p.quantity * p.price), 0);
+            document.getElementById('total-value').textContent = `R$ ${totalValue.toFixed(2)}`;
+            
+            // Lista de produtos com estoque baixo
+            const lowStockList = document.getElementById('low-stock-list');
+            lowStockList.innerHTML = '';
+            
+            lowStockItems.forEach(product => {
+                const item = document.createElement('tr');
+                item.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${product.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${product.quantity}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${product.minStock}</td>
+                `;
+                lowStockList.appendChild(item);
+            });
+            
+            // Movimentação recente (últimas 5 entradas e saídas)
+            const recentMovements = document.getElementById('recent-movements');
+            recentMovements.innerHTML = '';
+            
+            const allMovements = [
+                ...db.entries.map(e => ({ ...e, type: 'Entrada' })),
+                ...db.exits.map(e => ({ ...e, type: 'Saída' }))
+            ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+            
+            allMovements.forEach(move => {
+                const product = db.products.find(p => p.id === move.productId);
+                const productName = product ? product.name : 'Produto não encontrado';
+                
+                const item = document.createElement('tr');
+                item.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${move.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${move.type}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${productName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${move.quantity}</td>
+                `;
+                recentMovements.appendChild(item);
+            });
+            
+            // Produtos mais movimentados
+            const topProducts = document.getElementById('top-products');
+            topProducts.innerHTML = '';
+            
+            const productMovements = {};
+            
+            db.products.forEach(product => {
+                productMovements[product.id] = {
+                    name: product.name,
+                    entries: 0,
+                    exits: 0
+                };
+            });
+            
+            db.entries.forEach(entry => {
+                if (productMovements[entry.productId]) {
+                    productMovements[entry.productId].entries += entry.quantity;
+                }
+            });
+            
+            db.exits.forEach(exit => {
+                if (productMovements[exit.productId]) {
+                    productMovements[exit.productId].exits += exit.quantity;
+                }
+            });
+            
+            const sortedProducts = Object.values(productMovements)
+                .sort((a, b) => (b.entries + b.exits) - (a.entries + a.exits))
+                .slice(0, 5);
+            
+            sortedProducts.forEach(product => {
+                const item = document.createElement('tr');
+                item.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${product.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${product.entries}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${product.exits}</td>
+                `;
+                topProducts.appendChild(item);
+            });
+        }
+
+        function showProductForm(product = null) {
+            const form = document.getElementById('product-form');
+            const formData = document.getElementById('product-form-data');
+            
+            if (product) {
+                document.getElementById('product-id').value = product.id;
+                document.getElementById('product-code').value = product.code;
+                document.getElementById('product-name').value = product.name;
+                document.getElementById('product-category').value = product.category;
+                document.getElementById('product-quantity').value = product.quantity;
+                document.getElementById('product-price').value = product.price;
+                document.getElementById('product-min-stock').value = product.minStock;
+            } else {
+                formData.reset();
+                document.getElementById('product-id').value = '';
+            }
+            
+            form.classList.remove('hidden');
+        }
+
+        function showEntryForm() {
+            const form = document.getElementById('entry-form');
+            const productSelect = document.getElementById('entry-product');
+            
+            // Preenche o select de produtos
+            productSelect.innerHTML = '';
+            db.products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = `${product.code} - ${product.name}`;
+                productSelect.appendChild(option);
+            });
+            
+            // Define a data atual como padrão
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('entry-date').value = today;
+            
+            form.classList.remove('hidden');
+        }
+
+        function showExitForm() {
+            const form = document.getElementById('exit-form');
+            const productSelect = document.getElementById('exit-product');
+            
+            // Preenche o select de produtos
+            productSelect.innerHTML = '';
+            db.products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = `${product.code} - ${product.name}`;
+                productSelect.appendChild(option);
+            });
+            
+            // Define a data atual como padrão
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('exit-date').value = today;
+            
+            form.classList.remove('hidden');
+        }
+
+        function editProduct(id) {
+            const product = db.products.find(p => p.id === id);
+            if (product) {
+                showProductForm(product);
+            }
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Tem certeza que deseja excluir este produto?')) {
+                const index = db.products.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    db.products.splice(index, 1);
+saveDB();
+                    updateProductsList();
+                }
+            }
+        }
+
+        function deleteEntry(id) {
+            if (confirm('Tem certeza que deseja excluir esta entrada?')) {
+                const index = db.entries.findIndex(e => e.id === id);
+                if (index !== -1) {
+                    const entry = db.entries[index];
+                    
+                    // Atualiza o estoque do produto
+                    const product = db.products.find(p => p.id === entry.productId);
+                    if (product) {
+                        product.quantity -= entry.quantity;
+                    }
+                    
+                    db.entries.splice(index, 1);
+saveDB();
+                    updateEntriesList();
+                    updateReports();
+                }
+            }
+        }
+
+        function deleteExit(id) {
+            if (confirm('Tem certeza que deseja excluir esta saída?')) {
+                const index = db.exits.findIndex(e => e.id === id);
+                if (index !== -1) {
+                    const exit = db.exits[index];
+                    
+                    // Atualiza o estoque do produto
+                    const product = db.products.find(p => p.id === exit.productId);
+                    if (product) {
+                        product.quantity += exit.quantity;
+                    }
+                    
+                    db.exits.splice(index, 1);
+saveDB();
+                    updateExitsList();
+                    updateReports();
+                }
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            const user = db.users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                loginScreen.classList.add('hidden');
+                app.classList.remove('hidden');
+                showSection('products');
+            } else {
+                alert('Usuário ou senha incorretos!');
+            }
+        });
+
+        document.getElementById('register-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('reg-name').value;
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                alert('As senhas não coincidem!');
+                return;
+            }
+            
+            if (db.users.some(u => u.username === username)) {
+                alert('Este nome de usuário já está em uso!');
+                return;
+            }
+            
+            const newUser = {
+                id: db.users.length + 1,
+                name,
+                username,
+                password
+            };
+            
+            db.users.push(newUser);
+saveDB();
+            alert('Cadastro realizado com sucesso! Faça login para continuar.');
+            document.getElementById('show-login').click();
+        });
+
+        document.getElementById('show-register').addEventListener('click', (e) => {
+            e.preventDefault();
+            loginScreen.classList.add('hidden');
+            registerScreen.classList.remove('hidden');
+        });
+
+        document.getElementById('show-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            registerScreen.classList.add('hidden');
+            loginScreen.classList.remove('hidden');
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            currentUser = null;
+            app.classList.add('hidden');
+            loginScreen.classList.remove('hidden');
+            document.getElementById('login-form').reset();
+        });
+
+        document.getElementById('products-btn').addEventListener('click', () => {
+            showSection('products');
+            document.getElementById('products-btn').classList.add('active');
+            document.getElementById('entries-btn').classList.remove('active');
+            document.getElementById('exits-btn').classList.remove('active');
+            document.getElementById('reports-btn').classList.remove('active');
+        });
+
+        document.getElementById('entries-btn').addEventListener('click', () => {
+            showSection('entries');
+            document.getElementById('products-btn').classList.remove('active');
+            document.getElementById('entries-btn').classList.add('active');
+            document.getElementById('exits-btn').classList.remove('active');
+            document.getElementById('reports-btn').classList.remove('active');
+        });
+
+        document.getElementById('exits-btn').addEventListener('click', () => {
+            showSection('exits');
+            document.getElementById('products-btn').classList.remove('active');
+            document.getElementById('entries-btn').classList.remove('active');
+            document.getElementById('exits-btn').classList.add('active');
+            document.getElementById('reports-btn').classList.remove('active');
+        });
+
+        document.getElementById('reports-btn').addEventListener('click', () => {
+            showSection('reports');
+            document.getElementById('products-btn').classList.remove('active');
+            document.getElementById('entries-btn').classList.remove('active');
+            document.getElementById('exits-btn').classList.remove('active');
+            document.getElementById('reports-btn').classList.add('active');
+        });
+
+        document.getElementById('add-product-btn').addEventListener('click', () => {
+            showProductForm();
+        });
+
+        document.getElementById('add-entry-btn').addEventListener('click', () => {
+            showEntryForm();
+        });
+
+        document.getElementById('add-exit-btn').addEventListener('click', () => {
+            showExitForm();
+        });
+
+        document.getElementById('cancel-product-btn').addEventListener('click', () => {
+            document.getElementById('product-form').classList.add('hidden');
+        });
+
+        document.getElementById('cancel-entry-btn').addEventListener('click', () => {
+            document.getElementById('entry-form').classList.add('hidden');
+        });
+
+        document.getElementById('cancel-exit-btn').addEventListener('click', () => {
+            document.getElementById('exit-form').classList.add('hidden');
+        });
+
+        document.getElementById('product-form-data').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('product-id').value;
+            const code = document.getElementById('product-code').value;
+            const name = document.getElementById('product-name').value;
+            const category = document.getElementById('product-category').value;
+            const quantity = parseInt(document.getElementById('product-quantity').value);
+            const price = parseFloat(document.getElementById('product-price').value);
+            const minStock = parseInt(document.getElementById('product-min-stock').value);
+            
+            if (id) {
+                // Edição de produto existente
+                const index = db.products.findIndex(p => p.id === parseInt(id));
+                if (index !== -1) {
+                    db.products[index] = {
+ 
+                        id: parseInt(id), 
+                        code, 
+                        name, 
+                        category, 
+                        quantity, 
+                        price, 
+                        minStock 
+                    };
+                }
+            } else {
+                // Novo produto
+                const newId = db.products.length > 0 ? Math.max(...db.products.map(p => p.id)) + 1 : 1;
+                db.products.push({ 
+                    id: newId, 
+                    code, 
+                    name, 
+                    category, 
+                    quantity, 
+                    price, 
+                    minStock 
+                });
+            }
+            
+            document.getElementById('product-form').classList.add('hidden');
+            updateProductsList();
+            updateReports();
+        });
+
+        document.getElementById('entry-form-data').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const productId = parseInt(document.getElementById('entry-product').value);
+            const quantity = parseInt(document.getElementById('entry-quantity').value);
+            const date = document.getElementById('entry-date').value;
+            const supplier = document.getElementById('entry-supplier').value;
+            const notes = document.getElementById('entry-notes').value;
+            
+            // Adiciona a entrada
+            const newId = db.entries.length > 0 ? Math.max(...db.entries.map(e => e.id)) + 1 : 1;
+            db.entries.push({ 
+                id: newId, 
+                productId, 
+                quantity, 
+                date, 
+                supplier, 
+                notes 
+            });
+            
+            // Atualiza o estoque do produto
+            const product = db.products.find(p => p.id === productId);
+            if (product) {
+                product.quantity += quantity;
+            }
+            
+            document.getElementById('entry-form').classList.add('hidden');
+            updateEntriesList();
+            updateProductsList();
+            updateReports();
+        });
+
+        document.getElementById('exit-form-data').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const productId = parseInt(document.getElementById('exit-product').value);
+            const quantity = parseInt(document.getElementById('exit-quantity').value);
+            const date = document.getElementById('exit-date').value;
+            const destination = document.getElementById('exit-destination').value;
+            const notes = document.getElementById('exit-notes').value;
+            
+            // Verifica se há estoque suficiente
+            const product = db.products.find(p => p.id === productId);
+            if (product && product.quantity < quantity) {
+                alert('Estoque insuficiente para esta saída!');
+                return;
+            }
+            
+            // Adiciona a saída
+            const newId = db.exits.length > 0 ? Math.max(...db.exits.map(e => e.id)) + 1 : 1;
+            db.exits.push({ 
+                id: newId, 
+                productId, 
+                quantity, 
+                date, 
+                destination, 
+                notes 
+            });
+            
+            // Atualiza o estoque do produto
+            if (product) {
+                product.quantity -= quantity;
+            }
+            
+            document.getElementById('exit-form').classList.add('hidden');
+            updateExitsList();
+            updateProductsList();
+            updateReports();
+        });
+
+        // Inicialização
+        document.getElementById('products-btn').classList.add('active');
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;"><!-- Removido: Made with <img src="https://#/logo.svg" alt="  Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://#" style="color: #fff;text-decoration: underline;" target="_blank" > </a> - 🧬 <a href="https://#?remix=ifpiescola/teste1" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p> --></body>
+</html>
